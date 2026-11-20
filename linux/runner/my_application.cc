@@ -7,6 +7,13 @@
 
 #include "flutter/generated_plugin_registrant.h"
 
+// G_APPLICATION_DEFAULT_FLAGS needs glib 2.74. Older systems, including
+// Ubuntu 22.04 (glib 2.72), which the release package is built on so it runs
+// on more distributions, call the same value G_APPLICATION_FLAGS_NONE.
+#if !GLIB_CHECK_VERSION(2, 74, 0)
+#define G_APPLICATION_DEFAULT_FLAGS G_APPLICATION_FLAGS_NONE
+#endif
+
 struct _MyApplication {
   GtkApplication parent_instance;
   char** dart_entrypoint_arguments;
