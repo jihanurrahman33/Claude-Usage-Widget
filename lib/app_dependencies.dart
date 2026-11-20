@@ -4,6 +4,7 @@ import 'package:claude_usage_widget/data/repositories/status_line_repository.dar
 import 'package:claude_usage_widget/data/repositories/usage_repository.dart';
 import 'package:claude_usage_widget/data/services/autostart_service.dart';
 import 'package:claude_usage_widget/data/services/claude_settings_service.dart';
+import 'package:claude_usage_widget/data/services/lean_ctx_service.dart';
 import 'package:claude_usage_widget/data/services/notification_service.dart';
 import 'package:claude_usage_widget/data/services/preferences_service.dart';
 import 'package:claude_usage_widget/data/services/tray_service.dart';
@@ -67,6 +68,9 @@ class AppDependencies {
       notifications: _notifications(),
       accentPicker: Platform.isLinux,
       updater: GitHubUpdateService(),
+      leanCtx: CliLeanCtxService(
+        searchDirs: CliLeanCtxService.defaultSearchDirs(env),
+      ),
     );
     return AppDependencies(
       preferences: preferences,

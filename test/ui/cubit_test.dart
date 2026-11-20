@@ -4,12 +4,14 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:claude_usage_widget/data/repositories/status_line_repository.dart';
 import 'package:claude_usage_widget/data/repositories/usage_repository.dart';
 import 'package:claude_usage_widget/data/services/autostart_service.dart';
+import 'package:claude_usage_widget/data/services/lean_ctx_service.dart';
 import 'package:claude_usage_widget/data/services/notification_service.dart';
 import 'package:claude_usage_widget/data/services/preferences_service.dart';
 import 'package:claude_usage_widget/data/services/tray_service.dart';
 import 'package:claude_usage_widget/data/services/update_service.dart';
 import 'package:claude_usage_widget/data/services/window_service.dart';
 import 'package:claude_usage_widget/domain/models/accent_choice.dart';
+import 'package:claude_usage_widget/domain/models/lean_ctx_stats.dart';
 import 'package:claude_usage_widget/domain/models/rate_limit.dart';
 import 'package:claude_usage_widget/domain/models/usage_snapshot.dart';
 import 'package:claude_usage_widget/ui/features/usage_widget/cubit/usage_widget_cubit.dart';
@@ -263,6 +265,85 @@ void main() {
     },
   );
 
+  group('lean-ctx', () {
+    late _MockLeanCtx leanCtx;
+    const stats = LeanCtxStats(
+      tokensSaved: 1000,
+      reductionPercent: 25,
+      commands: 10,
+    );
+
+    setUp(() {
+      leanCtx = _MockLeanCtx();
+      when(() => leanCtx.isInstalled()).thenAnswer((_) async => true);
+      when(() => leanCtx.read()).thenAnswer((_) async => stats);
+    });
+
+    UsageWidgetCubit makeWithLeanCtx() => UsageWidgetCubit(
+      usage: usage,
+      statusLine: statusLine,
+      autostart: autostart,
+      preferences: preferences,
+      window: window,
+      tray: tray,
+      notifications: notifications,
+      leanCtx: leanCtx,
+      morphDuration: Duration.zero,
+      clock: () => now,
+    );
+
+    test('installed: the switch is offered and the figures are read', () async {
+      final cubit = makeWithLeanCtx();
+      await cubit.start();
+      await pumpEventQueue();
+      expect(cubit.state.leanCtxAvailable, isTrue);
+      expect(cubit.state.leanCtx, stats);
+      await cubit.close();
+    });
+
+    test('not installed: nothing is offered or run', () async {
+      when(() => leanCtx.isInstalled()).thenAnswer((_) async => false);
+      final cubit = makeWithLeanCtx();
+      await cubit.start();
+      await pumpEventQueue();
+      expect(cubit.state.leanCtxAvailable, isFalse);
+      verifyNever(() => leanCtx.read());
+      await cubit.close();
+    });
+
+    test('switched off, it is not run; switching on reads at once', () async {
+      await preferences.saveLeanCtx(value: false);
+      final cubit = makeWithLeanCtx();
+      await cubit.start();
+      await pumpEventQueue();
+      verifyNever(() => leanCtx.read());
+
+      await cubit.toggleLeanCtx();
+      await pumpEventQueue();
+      expect(cubit.state.leanCtxEnabled, isTrue);
+      expect(preferences.leanCtx, isTrue);
+      expect(cubit.state.leanCtx, stats);
+      await cubit.close();
+    });
+
+    test('a failed read keeps the last good figures', () async {
+      final cubit = makeWithLeanCtx();
+      await cubit.start();
+      await pumpEventQueue();
+      when(() => leanCtx.read()).thenAnswer((_) async => null);
+      await cubit.refreshLeanCtx();
+      expect(cubit.state.leanCtx, stats);
+      await cubit.close();
+    });
+
+    test('no service: the cubit works as before', () async {
+      final cubit = make();
+      await cubit.start();
+      expect(cubit.state.leanCtxAvailable, isFalse);
+      await cubit.close();
+    });
+  });
+
   group('updates', () {
     late _MockUpdater updater;
 
@@ -346,3 +427,5 @@ void main() {
 }
 
 class _MockUpdater extends Mock implements UpdateService {}
+
+class _MockLeanCtx extends Mock implements LeanCtxService {}

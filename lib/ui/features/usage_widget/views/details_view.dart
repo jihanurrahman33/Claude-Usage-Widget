@@ -1,4 +1,5 @@
 import 'package:claude_usage_widget/config/app_constants.dart';
+import 'package:claude_usage_widget/domain/models/lean_ctx_stats.dart';
 import 'package:claude_usage_widget/domain/models/rate_limit.dart';
 import 'package:claude_usage_widget/domain/models/usage_snapshot.dart';
 import 'package:claude_usage_widget/ui/core/formatters.dart';
@@ -11,13 +12,21 @@ import 'package:material_ui/material_ui.dart';
 /// Expanded view: a header and two tiles, one per limit or figure.
 class DetailsView extends StatelessWidget {
   /// Creates the details for [snapshot] as of [now].
-  const DetailsView({required this.snapshot, required this.now, super.key});
+  const DetailsView({
+    required this.snapshot,
+    required this.now,
+    this.leanCtx,
+    super.key,
+  });
 
   /// What to show.
   final UsageSnapshot snapshot;
 
   /// Time used for countdowns and freshness.
   final DateTime now;
+
+  /// lean-ctx's savings, shown in a strip below the tiles when present.
+  final LeanCtxStats? leanCtx;
 
   @override
   Widget build(BuildContext context) => Padding(
@@ -32,6 +41,10 @@ class DetailsView extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         Expanded(child: _body()),
+        if (leanCtx case final stats?) ...[
+          const SizedBox(height: 8),
+          _LeanCtxStrip(stats: stats),
+        ],
       ],
     ),
   );
@@ -83,6 +96,81 @@ class DetailsView extends StatelessWidget {
         (RateLimit(resetsAt: null), _) => 'of limit',
         _ => 'Reset',
       },
+    );
+  }
+}
+
+/// lean-ctx's savings: three small figures in one tile.
+class _LeanCtxStrip extends StatelessWidget {
+  const _LeanCtxStrip({required this.stats});
+
+  final LeanCtxStats stats;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    height: 44,
+    child: GlassTile(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: _StripFigure(
+              figure: formatCount(stats.tokensSaved),
+              label: 'Tokens saved',
+            ),
+          ),
+          Expanded(
+            child: _StripFigure(
+              figure: '${stats.reductionPercent.round()}%',
+              label: 'Reduced',
+            ),
+          ),
+          Expanded(
+            child: _StripFigure(
+              figure: formatCount(stats.commands),
+              label: 'Commands',
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+class _StripFigure extends StatelessWidget {
+  const _StripFigure({required this.figure, required this.label});
+
+  final String figure;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final glass = GlassTheme.of(context);
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            figure,
+            maxLines: 1,
+            style: AppText.style(
+              14,
+              color: glass.label,
+              weight: FontWeight.w700,
+              tabular: true,
+            ),
+          ),
+        ),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            label,
+            maxLines: 1,
+            style: AppText.style(10, color: glass.tertiary),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -111,6 +111,7 @@ class _Content extends StatelessWidget {
           ViewMode.details => DetailsView(
             snapshot: state.snapshot,
             now: state.now,
+            leanCtx: state.visibleLeanCtx,
           ),
           ViewMode.menu => MenuView(state: state, actions: cubit),
         },

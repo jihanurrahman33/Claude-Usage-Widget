@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:claude_usage_widget/domain/models/lean_ctx_stats.dart';
 import 'package:claude_usage_widget/domain/models/rate_limit.dart';
 import 'package:claude_usage_widget/domain/models/usage_snapshot.dart';
 import 'package:claude_usage_widget/ui/core/formatters.dart';
@@ -36,12 +37,20 @@ void main() {
     ViewMode mode = ViewMode.pill,
     bool tray = true,
     String? error,
+    LeanCtxStats? leanCtx,
+    bool leanCtxAvailable = false,
+    bool leanCtxEnabled = true,
+    String? update,
   }) => UsageWidgetState(
     now: testNow,
     snapshot: snapshot,
     viewMode: mode,
     trayAvailable: tray,
     errorMessage: error,
+    leanCtx: leanCtx,
+    leanCtxAvailable: leanCtxAvailable,
+    leanCtxEnabled: leanCtxEnabled,
+    availableUpdate: update,
   );
 
   /// Shows the whole widget in a window of exactly the size the app gives it.
@@ -199,5 +208,83 @@ void main() {
     final peak = [for (var t = 0.0; t <= 1; t += 0.01) spring.transform(t)]
         .reduce((a, b) => a > b ? a : b);
     expect(peak, lessThan(1.03));
+  });
+
+  const leanCtx = LeanCtxStats(
+    tokensSaved: 288018,
+    reductionPercent: 26.2,
+    commands: 2175,
+  );
+
+  testWidgets('details show the lean-ctx strip and fit with it', (
+    tester,
+  ) async {
+    for (final brightness in Brightness.values) {
+      for (final snapshot in [subscription(), apiUsage, gatewayUsage]) {
+        await show(
+          tester,
+          state(snapshot: snapshot, mode: ViewMode.details, leanCtx: leanCtx),
+          brightness: brightness,
+        );
+        expect(tester.takeException(), isNull, reason: '$snapshot');
+        expect(find.text('288K'), findsOneWidget);
+        expect(find.text('26%'), findsOneWidget);
+        expect(find.text('2.2K'), findsOneWidget);
+        expect(find.text('Tokens saved'), findsOneWidget);
+      }
+    }
+  });
+
+  testWidgets('the strip is hidden when switched off or before any usage', (
+    tester,
+  ) async {
+    await show(
+      tester,
+      state(
+        snapshot: subscription(),
+        mode: ViewMode.details,
+        leanCtx: leanCtx,
+        leanCtxEnabled: false,
+      ),
+    );
+    expect(find.text('Tokens saved'), findsNothing);
+
+    await show(tester, state(mode: ViewMode.details, leanCtx: leanCtx));
+    expect(find.text('Tokens saved'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('settings fit with every optional row at once', (tester) async {
+    for (final tray in [true, false]) {
+      await show(
+        tester,
+        state(
+          mode: ViewMode.menu,
+          tray: tray,
+          leanCtxAvailable: true,
+          update: '9.9.9',
+        ),
+      );
+      expect(tester.takeException(), isNull, reason: 'tray=$tray');
+      expect(find.text('lean-ctx Stats'), findsOneWidget);
+      expect(find.text('Update to 9.9.9'), findsOneWidget);
+    }
+  });
+
+  testWidgets('the lean-ctx row is offered only when lean-ctx is installed', (
+    tester,
+  ) async {
+    await show(tester, state(mode: ViewMode.menu));
+    expect(find.text('lean-ctx Stats'), findsNothing);
+  });
+
+  test('formatCount shortens large numbers', () {
+    expect(formatCount(0), '0');
+    expect(formatCount(842), '842');
+    expect(formatCount(1000), '1.0K');
+    expect(formatCount(2175), '2.2K');
+    expect(formatCount(12400), '12K');
+    expect(formatCount(288018), '288K');
+    expect(formatCount(1300000), '1.3M');
   });
 }

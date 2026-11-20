@@ -6,6 +6,7 @@ import 'package:claude_usage_widget/config/app_constants.dart';
 import 'package:claude_usage_widget/data/repositories/status_line_repository.dart';
 import 'package:claude_usage_widget/data/repositories/usage_repository.dart';
 import 'package:claude_usage_widget/data/services/autostart_service.dart';
+import 'package:claude_usage_widget/data/services/lean_ctx_service.dart';
 import 'package:claude_usage_widget/data/services/notification_service.dart';
 import 'package:claude_usage_widget/data/services/preferences_service.dart';
 import 'package:claude_usage_widget/data/services/tray_service.dart';
@@ -40,6 +41,7 @@ class UsageWidgetCubit extends Cubit<UsageWidgetState>
     required this._tray,
     required this._notifications,
     this._updater,
+    this._leanCtx,
     AlertPolicy? alertPolicy,
     bool accentPicker = false,
     Duration morphDuration = AppMotion.morph,
@@ -60,6 +62,7 @@ class UsageWidgetCubit extends Cubit<UsageWidgetState>
            accent: accentPicker ? preferences.accent : AccentChoice.claude,
            accentPickerAvailable: accentPicker,
            autoUpdate: preferences.autoUpdate,
+           leanCtxEnabled: preferences.leanCtx,
          ),
        );
 
@@ -71,6 +74,7 @@ class UsageWidgetCubit extends Cubit<UsageWidgetState>
   final TrayService _tray;
   final NotificationService _notifications;
   final UpdateService? _updater;
+  final LeanCtxService? _leanCtx;
   final AlertPolicy _alerts;
   final WindowMorpher _morpher;
   final DateTime Function() _clock;
@@ -79,6 +83,7 @@ class UsageWidgetCubit extends Cubit<UsageWidgetState>
   StreamSubscription<Offset>? _moveSub;
   Timer? _redraw;
   Timer? _updateCheck;
+  Timer? _leanCtxPoll;
   String? _installAttempted;
 
   /// Loads settings, starts the tray and begins listening for usage.
@@ -107,6 +112,44 @@ class UsageWidgetCubit extends Cubit<UsageWidgetState>
       (_) => emit(state.copyWith(now: _clock())),
     );
     _scheduleUpdateChecks();
+    unawaited(_startLeanCtx());
+  }
+
+  Future<void> _startLeanCtx() async {
+    final service = _leanCtx;
+    if (service == null) return;
+    final available = await service.isInstalled();
+    if (isClosed) return;
+    emit(state.copyWith(leanCtxAvailable: available));
+    _scheduleLeanCtx();
+  }
+
+  void _scheduleLeanCtx() {
+    _leanCtxPoll?.cancel();
+    _leanCtxPoll = null;
+    if (!state.leanCtxAvailable || !state.leanCtxEnabled) return;
+    unawaited(refreshLeanCtx());
+    _leanCtxPoll = Timer.periodic(
+      AppConstants.leanCtxRefreshInterval,
+      (_) => unawaited(refreshLeanCtx()),
+    );
+  }
+
+  /// Re-reads lean-ctx's savings. A failed read keeps the last good figures.
+  Future<void> refreshLeanCtx() async {
+    final stats = await _leanCtx?.read();
+    if (stats == null || isClosed) return;
+    emit(state.copyWith(leanCtx: stats));
+    unawaited(_fitWindow());
+  }
+
+  @override
+  Future<void> toggleLeanCtx() async {
+    final enabled = !state.leanCtxEnabled;
+    emit(state.copyWith(leanCtxEnabled: enabled));
+    await _preferences.saveLeanCtx(value: enabled);
+    _scheduleLeanCtx();
+    unawaited(_fitWindow());
   }
 
   void _scheduleUpdateChecks() {
@@ -271,6 +314,7 @@ class UsageWidgetCubit extends Cubit<UsageWidgetState>
   Future<void> close() async {
     _redraw?.cancel();
     _updateCheck?.cancel();
+    _leanCtxPoll?.cancel();
     _morpher.cancel();
     await _usageSub?.cancel();
     await _moveSub?.cancel();

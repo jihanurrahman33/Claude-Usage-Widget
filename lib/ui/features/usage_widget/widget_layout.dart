@@ -21,6 +21,9 @@ abstract final class WidgetLayout {
   /// The expanded view before any data has arrived.
   static const emptyDetails = Size(264, 164);
 
+  /// Extra details height for the lean-ctx strip and the gap above it.
+  static const leanCtxStripHeight = 52.0;
+
   /// Height of one settings row.
   static const menuRowHeight = 36.0;
 
@@ -39,7 +42,11 @@ abstract final class WidgetLayout {
     ViewMode.menu => _menu(state),
     ViewMode.details => switch (state.snapshot) {
       NoUsage() => emptyDetails,
-      SubscriptionUsage() || GatewayUsage() || ApiUsage() => details,
+      SubscriptionUsage() || GatewayUsage() || ApiUsage() => Size(
+        details.width,
+        details.height +
+            (state.visibleLeanCtx == null ? 0 : leanCtxStripHeight),
+      ),
     },
   };
 
@@ -50,6 +57,7 @@ abstract final class WidgetLayout {
     var height = base.height;
     if (state.accentPickerAvailable) height += accentRowHeight;
     if (state.availableUpdate != null) height += menuRowHeight;
+    if (state.leanCtxAvailable) height += menuRowHeight;
     return Size(base.width, height);
   }
 

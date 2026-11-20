@@ -11,6 +11,9 @@
   about you or your usage is sent. **Settings → Auto-update** turns it off.
 - On macOS and Linux, installing an update runs the repository's `install.sh`,
   which verifies the download against the release's `SHA256SUMS`.
+- If `lean-ctx` is installed, it runs `lean-ctx gain --json` once a minute and
+  shows three numbers from the output. It sends nothing anywhere, and
+  **Settings → lean-ctx Stats** turns it off.
 - It does not read credentials or tokens.
 
 ## Reporting a vulnerability

@@ -35,10 +35,9 @@ void main() {
 
   test('domain stays free of Flutter UI and I/O', () {
     final offenders = [
-      for (final file
-          in Directory('lib/domain')
-              .listSync(recursive: true)
-              .whereType<File>())
+      for (final file in Directory(
+        'lib/domain',
+      ).listSync(recursive: true).whereType<File>())
         for (final line in file.readAsLinesSync())
           if (line.startsWith('import ') &&
               (line.contains("'dart:io'") ||

@@ -35,3 +35,12 @@ String formatAge(Duration age) {
 /// Formats [value] as dollars with [decimals] places.
 String formatMoney(double value, [int decimals = 2]) =>
     '\$${value.toStringAsFixed(decimals)}';
+
+/// A count in short form: `842`, `12.4K`, `288K`, `1.3M`.
+String formatCount(int value) {
+  String short(double v, String unit) =>
+      '${v < 10 ? v.toStringAsFixed(1) : v.round()}$unit';
+  if (value >= 1000000) return short(value / 1000000, 'M');
+  if (value >= 1000) return short(value / 1000, 'K');
+  return '$value';
+}
