@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:claude_usage_widget/ui/core/accent_palette.dart';
+import 'package:claude_usage_widget/ui/core/glass_theme.dart';
 import 'package:claude_usage_widget/ui/core/motion.dart';
 import 'package:claude_usage_widget/ui/core/widgets/glass_card.dart';
 import 'package:claude_usage_widget/ui/features/usage_widget/cubit/usage_widget_cubit.dart';
@@ -8,8 +10,8 @@ import 'package:claude_usage_widget/ui/features/usage_widget/views/details_view.
 import 'package:claude_usage_widget/ui/features/usage_widget/views/menu_view.dart';
 import 'package:claude_usage_widget/ui/features/usage_widget/views/pill_view.dart';
 import 'package:claude_usage_widget/ui/features/usage_widget/widget_layout.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// The floating card. It springs between the shapes of the three views while
 /// their content cross-fades, so the widget reads as one object changing
@@ -44,9 +46,16 @@ class UsageWidgetView extends StatelessWidget {
                       ? null
                       : cubit.toggleDetails,
                   onSecondaryTap: cubit.toggleMenu,
-                  child: GlassCard(
-                    opacity: state.opacity,
-                    child: _Content(state: state, cubit: cubit, size: cardSize),
+                  child: _Accented(
+                    state: state,
+                    child: GlassCard(
+                      opacity: state.opacity,
+                      child: _Content(
+                        state: state,
+                        cubit: cubit,
+                        size: cardSize,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -108,4 +117,32 @@ class _Content extends StatelessWidget {
       ),
     ),
   );
+}
+
+/// Applies the user's accent colour to the palette below it.
+class _Accented extends StatelessWidget {
+  const _Accented({required this.state, required this.child});
+
+  final UsageWidgetState state;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!state.accentPickerAvailable) return child;
+    final theme = Theme.of(context);
+    final accent = AccentPalette.of(
+      state.accent,
+      dark: theme.brightness == Brightness.dark,
+    );
+    return Theme(
+      data: theme.copyWith(
+        // Healthy rings take the accent; high and critical usage keep their
+        // warning colours. Text stays black or white.
+        extensions: [
+          GlassTheme.of(context).copyWith(accent: accent, ok: accent),
+        ],
+      ),
+      child: child,
+    );
+  }
 }

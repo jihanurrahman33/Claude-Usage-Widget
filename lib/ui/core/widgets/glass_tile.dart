@@ -1,5 +1,5 @@
 import 'package:claude_usage_widget/ui/core/glass_theme.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// An inset panel inside the glass card, used to group related content.
 class GlassTile extends StatelessWidget {

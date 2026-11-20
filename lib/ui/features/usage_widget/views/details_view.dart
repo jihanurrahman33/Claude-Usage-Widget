@@ -6,7 +6,7 @@ import 'package:claude_usage_widget/ui/core/glass_theme.dart';
 import 'package:claude_usage_widget/ui/core/widgets/glass_tile.dart';
 import 'package:claude_usage_widget/ui/core/widgets/percent_text.dart';
 import 'package:claude_usage_widget/ui/core/widgets/usage_ring.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Expanded view: a header and two tiles, one per limit or figure.
 class DetailsView extends StatelessWidget {

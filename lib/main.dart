@@ -12,6 +12,11 @@ Future<void> main() async {
     alwaysOnTop: dependencies.preferences.alwaysOnTop,
     position: dependencies.preferences.windowPosition,
   );
-  runApp(UsageWidgetApp(cubit: dependencies.cubit));
+  runApp(
+    UsageWidgetApp(
+      cubit: dependencies.cubit,
+      lightGlass: dependencies.lightGlass,
+    ),
+  );
   await dependencies.cubit.start();
 }

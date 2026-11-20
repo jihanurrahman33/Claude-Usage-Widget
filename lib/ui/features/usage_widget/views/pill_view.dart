@@ -3,7 +3,7 @@ import 'package:claude_usage_widget/ui/core/formatters.dart';
 import 'package:claude_usage_widget/ui/core/glass_theme.dart';
 import 'package:claude_usage_widget/ui/core/widgets/percent_text.dart';
 import 'package:claude_usage_widget/ui/core/widgets/usage_ring.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Collapsed view: one or two small rings with their values.
 class PillView extends StatelessWidget {

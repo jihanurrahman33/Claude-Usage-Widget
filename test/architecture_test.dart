@@ -43,6 +43,8 @@ void main() {
           if (line.startsWith('import ') &&
               (line.contains("'dart:io'") ||
                   line.contains('package:flutter/material.dart') ||
+                  line.contains('package:material_ui/') ||
+                  line.contains('package:cupertino_ui/') ||
                   line.contains('package:flutter/widgets.dart')))
             '${file.path}: $line',
     ];

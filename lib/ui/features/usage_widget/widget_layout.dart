@@ -30,22 +30,27 @@ abstract final class WidgetLayout {
   /// Settings, without the tray entry.
   static const menuWithoutTray = Size(264, 309);
 
+  /// Extra settings height for the accent colour row and its hairline.
+  static const accentRowHeight = 36.5;
+
   /// Size of the card for [state].
   static Size cardSize(UsageWidgetState state) => switch (state.viewMode) {
     ViewMode.pill => pill,
-    ViewMode.menu => _menuSize(state),
+    ViewMode.menu => _menu(state),
     ViewMode.details => switch (state.snapshot) {
       NoUsage() => emptyDetails,
       SubscriptionUsage() || GatewayUsage() || ApiUsage() => details,
     },
   };
 
-  /// Settings grow by one row when an update is waiting.
-  static Size _menuSize(UsageWidgetState state) {
+  /// Settings grow by one row for the accent picker (Linux) and by one when
+  /// an update is waiting.
+  static Size _menu(UsageWidgetState state) {
     final base = state.trayAvailable ? menuWithTray : menuWithoutTray;
-    return state.availableUpdate == null
-        ? base
-        : Size(base.width, base.height + menuRowHeight);
+    var height = base.height;
+    if (state.accentPickerAvailable) height += accentRowHeight;
+    if (state.availableUpdate != null) height += menuRowHeight;
+    return Size(base.width, height);
   }
 
   /// Size of the window that holds a card of [card] size.

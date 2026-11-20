@@ -1,5 +1,5 @@
 import 'package:claude_usage_widget/config/app_constants.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// The widget's palette, with a dark and a light variant.
 ///
@@ -26,6 +26,7 @@ class GlassTheme extends ThemeExtension<GlassTheme> {
     required this.ok,
     required this.warn,
     required this.danger,
+    this.bodyFloor = 0,
   });
 
   /// Dark appearance: smoked glass.
@@ -69,6 +70,11 @@ class GlassTheme extends ThemeExtension<GlassTheme> {
     warn: Color(0xFFFF9500),
     danger: Color(0xFFFF3B30),
   );
+
+  /// Light appearance on Linux. With no desktop blur, white glass over a dark
+  /// desktop turns muddy grey and the grey text loses contrast, so the glass
+  /// never gets thinner than this floor.
+  static final linuxLight = light.copyWith(bodyFloor: 0.7);
 
   /// Top of the glass body, at full strength.
   final Color fillTop;
@@ -121,6 +127,15 @@ class GlassTheme extends ThemeExtension<GlassTheme> {
   /// Critical usage.
   final Color danger;
 
+  /// Weakest the glass body gets at the lowest opacity setting, in 0..1.
+  final double bodyFloor;
+
+  /// Strength of the glass body for the user's [opacity] setting.
+  double bodyStrength(double opacity) {
+    final o = opacity.clamp(0.0, 1.0);
+    return bodyFloor + (1 - bodyFloor) * o;
+  }
+
   /// Track of a ring that has no value to show.
   Color get placeholder => label.withValues(alpha: 0.14);
 
@@ -136,25 +151,27 @@ class GlassTheme extends ThemeExtension<GlassTheme> {
   }
 
   @override
-  GlassTheme copyWith({Color? accent}) => GlassTheme(
-    fillTop: fillTop,
-    fillBottom: fillBottom,
-    tile: tile,
-    tileRim: tileRim,
-    rimBright: rimBright,
-    rimDim: rimDim,
-    innerGlow: innerGlow,
-    outline: outline,
-    shadow: shadow,
-    label: label,
-    secondary: secondary,
-    tertiary: tertiary,
-    separator: separator,
-    accent: accent ?? this.accent,
-    ok: ok,
-    warn: warn,
-    danger: danger,
-  );
+  GlassTheme copyWith({Color? accent, Color? ok, double? bodyFloor}) =>
+      GlassTheme(
+        fillTop: fillTop,
+        fillBottom: fillBottom,
+        tile: tile,
+        tileRim: tileRim,
+        rimBright: rimBright,
+        rimDim: rimDim,
+        innerGlow: innerGlow,
+        outline: outline,
+        shadow: shadow,
+        label: label,
+        secondary: secondary,
+        tertiary: tertiary,
+        separator: separator,
+        accent: accent ?? this.accent,
+        ok: ok ?? this.ok,
+        warn: warn,
+        danger: danger,
+        bodyFloor: bodyFloor ?? this.bodyFloor,
+      );
 
   @override
   GlassTheme lerp(GlassTheme? other, double t) {
@@ -178,6 +195,7 @@ class GlassTheme extends ThemeExtension<GlassTheme> {
       ok: mix(ok, other.ok),
       warn: mix(warn, other.warn),
       danger: mix(danger, other.danger),
+      bodyFloor: bodyFloor + (other.bodyFloor - bodyFloor) * t,
     );
   }
 }
@@ -228,13 +246,18 @@ abstract final class AppText {
 }
 
 /// The app's [ThemeData] for [brightness], carrying the matching [GlassTheme].
-ThemeData buildAppTheme(Brightness brightness) => ThemeData(
+///
+/// [lightGlass] replaces the light palette, for platform-specific tuning.
+ThemeData buildAppTheme(
+  Brightness brightness, {
+  GlassTheme lightGlass = GlassTheme.light,
+}) => ThemeData(
   brightness: brightness,
   useMaterial3: true,
   fontFamily: AppText.family,
   scaffoldBackgroundColor: Colors.transparent,
   canvasColor: Colors.transparent,
   extensions: [
-    if (brightness == Brightness.dark) GlassTheme.dark else GlassTheme.light,
+    if (brightness == Brightness.dark) GlassTheme.dark else lightGlass,
   ],
 );

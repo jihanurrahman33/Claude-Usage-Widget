@@ -1,5 +1,5 @@
 import 'package:claude_usage_widget/ui/core/glass_theme.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// A floating liquid-glass surface with continuous (squircle) corners.
 ///
@@ -25,7 +25,7 @@ class GlassCard extends StatelessWidget {
   /// the card. The clearer the glass, the stronger it gets, so text stays
   /// readable when whatever is behind the window shows through.
   List<Shadow>? _legibilityShadow(GlassTheme glass) {
-    final strength = ((1 - opacity) * 1.1).clamp(0.0, 0.55);
+    final strength = ((1 - glass.bodyStrength(opacity)) * 1.1).clamp(0.0, 0.55);
     if (strength <= 0) return null;
     final lightText = glass.label.computeLuminance() > 0.5;
     final tone = lightText ? const Color(0xFF000000) : const Color(0xFFFFFFFF);
@@ -64,7 +64,7 @@ class _GlassPainter extends CustomPainter {
       rect,
       const Radius.circular(GlassCard.radius),
     );
-    final strength = opacity.clamp(0.0, 1.0);
+    final strength = glass.bodyStrength(opacity);
     Color body(Color c) => c.withValues(alpha: c.a * strength);
 
     _paintShadow(canvas, rect, shape);

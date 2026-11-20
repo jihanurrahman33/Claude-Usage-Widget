@@ -1,4 +1,5 @@
 import 'package:claude_usage_widget/config/app_constants.dart';
+import 'package:claude_usage_widget/domain/models/accent_choice.dart';
 import 'package:claude_usage_widget/domain/models/usage_snapshot.dart';
 import 'package:equatable/equatable.dart';
 
@@ -27,6 +28,8 @@ class UsageWidgetState extends Equatable {
     this.trayAvailable = false,
     this.windowVisible = true,
     this.alwaysOnTop = true,
+    this.accent = AccentChoice.claude,
+    this.accentPickerAvailable = false,
     this.autoUpdate = true,
     this.availableUpdate,
     this.errorMessage,
@@ -59,6 +62,12 @@ class UsageWidgetState extends Equatable {
   /// Whether the window stays above other windows.
   final bool alwaysOnTop;
 
+  /// Accent colour of the widget.
+  final AccentChoice accent;
+
+  /// Whether the settings offer the accent colour picker.
+  final bool accentPickerAvailable;
+
   /// Whether the app checks for and installs new releases.
   final bool autoUpdate;
 
@@ -81,6 +90,8 @@ class UsageWidgetState extends Equatable {
     bool? trayAvailable,
     bool? windowVisible,
     bool? alwaysOnTop,
+    AccentChoice? accent,
+    bool? accentPickerAvailable,
     bool? autoUpdate,
     String? availableUpdate,
     String? errorMessage,
@@ -95,6 +106,8 @@ class UsageWidgetState extends Equatable {
     trayAvailable: trayAvailable ?? this.trayAvailable,
     windowVisible: windowVisible ?? this.windowVisible,
     alwaysOnTop: alwaysOnTop ?? this.alwaysOnTop,
+    accent: accent ?? this.accent,
+    accentPickerAvailable: accentPickerAvailable ?? this.accentPickerAvailable,
     autoUpdate: autoUpdate ?? this.autoUpdate,
     availableUpdate: availableUpdate ?? this.availableUpdate,
     errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
@@ -111,6 +124,8 @@ class UsageWidgetState extends Equatable {
     trayAvailable,
     windowVisible,
     alwaysOnTop,
+    accent,
+    accentPickerAvailable,
     autoUpdate,
     availableUpdate,
     errorMessage,

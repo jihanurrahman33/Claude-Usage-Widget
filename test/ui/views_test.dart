@@ -8,11 +8,11 @@ import 'package:claude_usage_widget/ui/features/usage_widget/cubit/usage_widget_
 import 'package:claude_usage_widget/ui/features/usage_widget/cubit/usage_widget_state.dart';
 import 'package:claude_usage_widget/ui/features/usage_widget/views/usage_widget_view.dart';
 import 'package:claude_usage_widget/ui/features/usage_widget/widget_layout.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'support.dart';

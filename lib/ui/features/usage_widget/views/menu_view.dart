@@ -1,11 +1,13 @@
 import 'dart:async';
 
 import 'package:claude_usage_widget/config/app_constants.dart';
+import 'package:claude_usage_widget/domain/models/accent_choice.dart';
+import 'package:claude_usage_widget/ui/core/accent_palette.dart';
 import 'package:claude_usage_widget/ui/core/glass_theme.dart';
 import 'package:claude_usage_widget/ui/core/widgets/glass_tile.dart';
 import 'package:claude_usage_widget/ui/features/usage_widget/cubit/usage_widget_state.dart';
 import 'package:claude_usage_widget/ui/features/usage_widget/settings_actions.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
 
 /// Settings, shown on right-click: grouped rows with switches and a slider.
 class MenuView extends StatelessWidget {
@@ -86,6 +88,14 @@ class MenuView extends StatelessWidget {
                         onChangeEnd: actions.saveOpacity,
                       ),
                     ),
+                    if (state.accentPickerAvailable)
+                      _MenuRow(
+                        label: 'Accent',
+                        trailing: _AccentSwatches(
+                          selected: state.accent,
+                          onSelected: actions.setAccent,
+                        ),
+                      ),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -278,6 +288,59 @@ class _OpacitySlider extends StatelessWidget {
       ),
     ),
   );
+}
+
+/// A row of colour dots; the selected one is ringed.
+class _AccentSwatches extends StatelessWidget {
+  const _AccentSwatches({required this.selected, required this.onSelected});
+
+  final AccentChoice selected;
+  final Future<void> Function(AccentChoice) onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final glass = GlassTheme.of(context);
+    // Light text means the dark appearance.
+    final dark = glass.label.computeLuminance() > 0.5;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (final choice in AccentChoice.values)
+          Semantics(
+            button: true,
+            selected: choice == selected,
+            label: '${choice.name} accent',
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => unawaited(onSelected(choice)),
+              child: Padding(
+                padding: const EdgeInsets.only(left: 6),
+                child: Container(
+                  width: 18,
+                  height: 18,
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: choice == selected
+                          ? glass.label.withValues(alpha: 0.7)
+                          : const Color(0x00000000),
+                      width: 1.5,
+                    ),
+                  ),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AccentPalette.of(choice, dark: dark),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
 }
 
 /// A tinted text button, as in a navigation bar.

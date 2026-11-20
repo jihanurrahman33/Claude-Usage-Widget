@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:claude_usage_widget/domain/models/accent_choice.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Persists the user's window position and opacity.
@@ -13,6 +14,7 @@ class PreferencesService {
   static const _y = 'window_y';
   static const _opacity = 'opacity';
   static const _alwaysOnTop = 'always_on_top';
+  static const _accent = 'accent';
   static const _autoUpdate = 'auto_update';
 
   /// Last saved window position, or null on first run.
@@ -40,6 +42,13 @@ class PreferencesService {
   /// Saves the always-on-top choice.
   Future<void> saveAlwaysOnTop({required bool value}) =>
       _prefs.setBool(_alwaysOnTop, value);
+
+  /// Saved accent colour; Claude's own until changed.
+  AccentChoice get accent => AccentChoice.fromName(_prefs.getString(_accent));
+
+  /// Saves the accent colour.
+  Future<void> saveAccent(AccentChoice value) =>
+      _prefs.setString(_accent, value.name);
 
   /// Whether the app looks for and installs new releases; on unless turned off.
   bool get autoUpdate => _prefs.getBool(_autoUpdate) ?? true;

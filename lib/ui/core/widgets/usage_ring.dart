@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'package:claude_usage_widget/ui/core/glass_theme.dart';
 import 'package:claude_usage_widget/ui/core/motion.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// A circular gauge in the style of an activity ring: a rounded arc over a
 /// dimmed track of the same hue, springing to each new value.

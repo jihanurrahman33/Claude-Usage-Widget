@@ -1,5 +1,5 @@
 import 'package:claude_usage_widget/ui/core/glass_theme.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// A percentage set the way Apple sets units: a bold number with a smaller,
 /// quieter percent sign.

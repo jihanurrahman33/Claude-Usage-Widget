@@ -1,3 +1,5 @@
+import 'package:claude_usage_widget/domain/models/accent_choice.dart';
+
 /// The actions the settings view can trigger.
 ///
 /// The view depends on this narrow interface rather than on the whole cubit,
@@ -26,6 +28,9 @@ abstract interface class SettingsActions {
 
   /// Persists the current glass strength.
   Future<void> saveOpacity();
+
+  /// Switches to and saves the accent colour [choice].
+  Future<void> setAccent(AccentChoice choice);
 
   /// Shows or hides the window.
   Future<void> toggleVisibility();

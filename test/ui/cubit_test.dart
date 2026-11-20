@@ -9,6 +9,7 @@ import 'package:claude_usage_widget/data/services/preferences_service.dart';
 import 'package:claude_usage_widget/data/services/tray_service.dart';
 import 'package:claude_usage_widget/data/services/update_service.dart';
 import 'package:claude_usage_widget/data/services/window_service.dart';
+import 'package:claude_usage_widget/domain/models/accent_choice.dart';
 import 'package:claude_usage_widget/domain/models/rate_limit.dart';
 import 'package:claude_usage_widget/domain/models/usage_snapshot.dart';
 import 'package:claude_usage_widget/ui/features/usage_widget/cubit/usage_widget_cubit.dart';
@@ -100,6 +101,33 @@ void main() {
       resetsAt: now.add(const Duration(hours: 1)),
     ),
   );
+
+  test('picked accent is applied, saved and restored', () async {
+    UsageWidgetCubit withPicker() => UsageWidgetCubit(
+      usage: usage,
+      statusLine: statusLine,
+      autostart: autostart,
+      preferences: preferences,
+      window: window,
+      tray: tray,
+      notifications: notifications,
+      morphDuration: Duration.zero,
+      clock: () => now,
+      accentPicker: true,
+    );
+    final cubit = withPicker();
+    expect(cubit.state.accent, AccentChoice.claude);
+    await cubit.setAccent(AccentChoice.blue);
+    expect(cubit.state.accent, AccentChoice.blue);
+    await cubit.close();
+    final restored = withPicker();
+    expect(restored.state.accent, AccentChoice.blue);
+    await restored.close();
+    // Without the picker the saved choice is ignored.
+    final plain = make();
+    expect(plain.state.accent, AccentChoice.claude);
+    await plain.close();
+  });
 
   test('start loads settings and reports tray availability', () async {
     when(() => statusLine.isInstalled()).thenAnswer((_) async => true);

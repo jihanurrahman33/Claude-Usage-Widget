@@ -1,7 +1,7 @@
 import 'dart:async';
-import 'dart:ui';
 
 import 'package:claude_usage_widget/config/logger.dart';
+import 'package:flutter/services.dart';
 import 'package:window_manager/window_manager.dart';
 
 /// The native window: frameless, always on top, draggable.
@@ -61,7 +61,13 @@ class DesktopWindowService with WindowListener implements WindowService {
       ),
       () async {
         if (position != null) await windowManager.setPosition(position);
-        await windowManager.setHasShadow(false);
+        try {
+          await windowManager.setHasShadow(false);
+        } on MissingPluginException catch (e) {
+          // Not implemented by window_manager on Linux; the runner already
+          // strips the shadow in CSS.
+          logWarning('setHasShadow unsupported', e);
+        }
         await windowManager.show();
       },
     );
