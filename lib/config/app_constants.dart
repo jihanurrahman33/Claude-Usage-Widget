@@ -17,6 +17,9 @@ abstract final class AppConstants {
   static const installScriptUrl =
       'https://raw.githubusercontent.com/$repository/main/install.sh';
 
+  /// How often lean-ctx's savings are re-read.
+  static const leanCtxRefreshInterval = Duration(minutes: 1);
+
   /// How often the app looks for a newer release.
   static const updateCheckInterval = Duration(hours: 6);
 

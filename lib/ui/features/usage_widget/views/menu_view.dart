@@ -80,6 +80,14 @@ class MenuView extends StatelessWidget {
                         onChanged: actions.toggleAutoUpdate,
                       ),
                     ),
+                    if (state.leanCtxAvailable)
+                      _MenuRow(
+                        label: 'lean-ctx Stats',
+                        trailing: _Toggle(
+                          value: state.leanCtxEnabled,
+                          onChanged: actions.toggleLeanCtx,
+                        ),
+                      ),
                     _MenuRow(
                       label: 'Opacity',
                       trailing: _OpacitySlider(

@@ -33,6 +33,10 @@ widget keeps the answer on screen, so you see a limit coming before you hit it.
 - **Private by design.** It reads what Claude Code already hands to its status
   line and never reads your credentials. Its one network request is the
   [update check](#update), which you can turn off.
+- **lean-ctx savings.** If [lean-ctx](https://github.com/yvgude/lean-ctx) is
+  installed, the expanded view shows its tokens saved, reduction and command
+  count, read from `lean-ctx gain --json` every minute. Hidden when lean-ctx is
+  not installed, and Settings → **lean-ctx Stats** turns it off.
 - **Alerts** when a limit crosses 80% and 95%.
 - **Light and dark**, following your system theme.
 - **Always on top**, with a switch to turn it off.

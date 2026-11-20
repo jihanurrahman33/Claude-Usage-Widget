@@ -1,5 +1,6 @@
 import 'package:claude_usage_widget/config/app_constants.dart';
 import 'package:claude_usage_widget/domain/models/accent_choice.dart';
+import 'package:claude_usage_widget/domain/models/lean_ctx_stats.dart';
 import 'package:claude_usage_widget/domain/models/usage_snapshot.dart';
 import 'package:equatable/equatable.dart';
 
@@ -32,6 +33,9 @@ class UsageWidgetState extends Equatable {
     this.accentPickerAvailable = false,
     this.autoUpdate = true,
     this.availableUpdate,
+    this.leanCtxAvailable = false,
+    this.leanCtxEnabled = true,
+    this.leanCtx,
     this.errorMessage,
   });
 
@@ -74,6 +78,22 @@ class UsageWidgetState extends Equatable {
   /// Version of a newer release that is ready to install, or null.
   final String? availableUpdate;
 
+  /// Whether lean-ctx is installed, so its switch is worth offering.
+  final bool leanCtxAvailable;
+
+  /// Whether the user wants lean-ctx's savings shown.
+  final bool leanCtxEnabled;
+
+  /// The latest lean-ctx figures, or null until they have been read.
+  final LeanCtxStats? leanCtx;
+
+  /// The lean-ctx figures to draw in the details view, or null for none.
+  ///
+  /// Not shown before any usage data exists, where the empty-state message
+  /// needs the room.
+  LeanCtxStats? get visibleLeanCtx =>
+      leanCtxEnabled && snapshot is! NoUsage ? leanCtx : null;
+
   /// Last user-facing error, or null.
   final String? errorMessage;
 
@@ -94,6 +114,9 @@ class UsageWidgetState extends Equatable {
     bool? accentPickerAvailable,
     bool? autoUpdate,
     String? availableUpdate,
+    bool? leanCtxAvailable,
+    bool? leanCtxEnabled,
+    LeanCtxStats? leanCtx,
     String? errorMessage,
     bool clearError = false,
   }) => UsageWidgetState(
@@ -110,6 +133,9 @@ class UsageWidgetState extends Equatable {
     accentPickerAvailable: accentPickerAvailable ?? this.accentPickerAvailable,
     autoUpdate: autoUpdate ?? this.autoUpdate,
     availableUpdate: availableUpdate ?? this.availableUpdate,
+    leanCtxAvailable: leanCtxAvailable ?? this.leanCtxAvailable,
+    leanCtxEnabled: leanCtxEnabled ?? this.leanCtxEnabled,
+    leanCtx: leanCtx ?? this.leanCtx,
     errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
   );
 
@@ -128,6 +154,9 @@ class UsageWidgetState extends Equatable {
     accentPickerAvailable,
     autoUpdate,
     availableUpdate,
+    leanCtxAvailable,
+    leanCtxEnabled,
+    leanCtx,
     errorMessage,
   ];
 }

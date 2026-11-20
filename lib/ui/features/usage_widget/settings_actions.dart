@@ -20,6 +20,9 @@ abstract interface class SettingsActions {
   /// Turns automatic update checks and installs on or off.
   Future<void> toggleAutoUpdate();
 
+  /// Shows or hides lean-ctx's savings.
+  Future<void> toggleLeanCtx();
+
   /// Installs the available update now.
   Future<void> installUpdate();
 

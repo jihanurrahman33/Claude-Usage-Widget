@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:claude_usage_widget/config/app_constants.dart';
+import 'package:claude_usage_widget/config/logger.dart';
 import 'package:claude_usage_widget/domain/use_cases/version_compare.dart';
 
 /// Finds and installs newer releases.
@@ -58,8 +59,9 @@ class GitHubUpdateService implements UpdateService {
       if (tag is! String) return null;
       final version = tag.replaceFirst(RegExp('^v'), '');
       return isNewerVersion(current, version) ? version : null;
-    } on Exception {
+    } on Exception catch (e) {
       // Offline, rate limited or an unexpected reply: try again next time.
+      logWarning('Update check failed', e);
       return null;
     }
   }

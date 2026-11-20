@@ -6,6 +6,7 @@ import 'dart:ui' as ui;
 
 import 'package:bloc_test/bloc_test.dart';
 import 'package:claude_usage_widget/domain/models/accent_choice.dart';
+import 'package:claude_usage_widget/domain/models/lean_ctx_stats.dart';
 import 'package:claude_usage_widget/ui/core/glass_theme.dart';
 import 'package:claude_usage_widget/ui/core/motion.dart';
 import 'package:claude_usage_widget/ui/features/usage_widget/cubit/usage_widget_cubit.dart';
@@ -73,6 +74,24 @@ void main() {
       viewMode: ViewMode.details,
       accentPickerAvailable: true,
       accent: AccentChoice.blue,
+    ),
+    'details_leanctx': UsageWidgetState(
+      now: testNow,
+      snapshot: subscription(),
+      viewMode: ViewMode.details,
+      leanCtx: const LeanCtxStats(
+        tokensSaved: 288018,
+        reductionPercent: 26.2,
+        commands: 2175,
+      ),
+    ),
+    'menu_leanctx': UsageWidgetState(
+      now: testNow,
+      snapshot: subscription(),
+      viewMode: ViewMode.menu,
+      statusLineInstalled: true,
+      trayAvailable: true,
+      leanCtxAvailable: true,
     ),
   };
 

@@ -16,6 +16,7 @@ class PreferencesService {
   static const _alwaysOnTop = 'always_on_top';
   static const _accent = 'accent';
   static const _autoUpdate = 'auto_update';
+  static const _leanCtx = 'lean_ctx_stats';
 
   /// Last saved window position, or null on first run.
   Offset? get windowPosition {
@@ -52,6 +53,13 @@ class PreferencesService {
 
   /// Whether the app looks for and installs new releases; on unless turned off.
   bool get autoUpdate => _prefs.getBool(_autoUpdate) ?? true;
+
+  /// Whether lean-ctx's savings are shown; on unless turned off.
+  bool get leanCtx => _prefs.getBool(_leanCtx) ?? true;
+
+  /// Saves the lean-ctx choice.
+  Future<void> saveLeanCtx({required bool value}) =>
+      _prefs.setBool(_leanCtx, value);
 
   /// Saves the auto-update choice.
   Future<void> saveAutoUpdate({required bool value}) =>
