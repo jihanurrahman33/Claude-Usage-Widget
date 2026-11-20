@@ -5,6 +5,7 @@ import 'package:claude_usage_widget/data/models/lean_ctx_stats_mapper.dart';
 import 'package:claude_usage_widget/data/services/lean_ctx_service.dart';
 import 'package:claude_usage_widget/domain/models/lean_ctx_stats.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:path/path.dart' as p;
 
 const _gain = '''
 {
@@ -55,6 +56,13 @@ void main() {
   });
 
   group('CliLeanCtxService', () {
+    // The service looks for lean-ctx.exe on Windows, with that platform's
+    // separators, so the expected path is built the same way.
+    final binary = p.join(
+      '/opt/homebrew/bin',
+      Platform.isWindows ? 'lean-ctx.exe' : 'lean-ctx',
+    );
+
     CliLeanCtxService service({
       required Future<ProcessResult> Function(String, List<String>) run,
       bool installed = true,
@@ -62,7 +70,7 @@ void main() {
     }) => CliLeanCtxService(
       searchDirs: const ['/nowhere', '/opt/homebrew/bin'],
       run: (exe, args, {environment}) => run(exe, args),
-      exists: (path) => installed && path == '/opt/homebrew/bin/lean-ctx',
+      exists: (path) => installed && path == binary,
       timeout: timeout,
     );
 
@@ -90,7 +98,7 @@ void main() {
         },
       );
       expect((await s.read())?.tokensSaved, 288018);
-      expect(exe, '/opt/homebrew/bin/lean-ctx');
+      expect(exe, binary);
       expect(args, ['gain', '--json']);
     });
 

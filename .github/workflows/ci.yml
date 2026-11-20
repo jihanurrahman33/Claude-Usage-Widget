@@ -5,7 +5,9 @@ on:
 
 jobs:
   check:
-    runs-on: ubuntu-latest
+    # The release package is built on this Ubuntu, so check on it too: a newer
+    # one has newer system libraries and hides what an older one lacks.
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
@@ -19,3 +21,20 @@ jobs:
       - run: flutter test
       - name: Bridge
         run: cd bridge && dart pub get && dart analyze && dart test
+      # Compiles the native runner, which analyze and the tests never touch.
+      - name: Linux build
+        run: flutter build linux --debug
+
+  # Releases are built on Windows too, and some failures only show there
+  # (path separators, executable names). Catch them before merging.
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with: { channel: stable, flutter-version: 3.50.0 }
+      - run: flutter pub get
+      - run: flutter test
+      - name: Bridge tests
+        shell: bash
+        run: cd bridge && dart pub get && dart test
