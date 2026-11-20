@@ -15,6 +15,12 @@ abstract interface class SettingsActions {
   /// Turns launch at login on or off.
   Future<void> toggleStartup();
 
+  /// Turns automatic update checks and installs on or off.
+  Future<void> toggleAutoUpdate();
+
+  /// Installs the available update now.
+  Future<void> installUpdate();
+
   /// Previews a new glass strength while the slider moves.
   void setOpacity(double value);
 

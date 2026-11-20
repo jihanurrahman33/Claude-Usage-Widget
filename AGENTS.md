@@ -11,8 +11,9 @@ A Flutter desktop widget that shows Claude Code usage. Two Dart packages:
   line command. The app also imports it as a path package for shared helpers.
 
 Data flow: Claude Code → `usage_bridge` → JSON records in
-`<claude config>/usage-widget/` → the app. The app makes **no network calls**.
-Keep it that way.
+`<claude config>/usage-widget/` → the app. The app's only network request is the update check in
+`lib/data/services/update_service.dart` (the latest release's version number,
+user-switchable in Settings). Do not add any other network call.
 
 ## Commands
 

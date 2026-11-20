@@ -6,7 +6,12 @@
 - With your consent (the **Status Line** switch) it edits the `statusLine`
   entry of Claude Code's `settings.json`, and keeps a backup of the previous
   value.
-- It makes no network calls and does not read credentials or tokens.
+- Its only network request is an anonymous check of GitHub's public API for
+  the latest release's version number, at start and every six hours. Nothing
+  about you or your usage is sent. **Settings → Auto-update** turns it off.
+- On macOS and Linux, installing an update runs the repository's `install.sh`,
+  which verifies the download against the release's `SHA256SUMS`.
+- It does not read credentials or tokens.
 
 ## Reporting a vulnerability
 

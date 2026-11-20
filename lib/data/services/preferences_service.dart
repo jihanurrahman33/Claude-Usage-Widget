@@ -13,6 +13,7 @@ class PreferencesService {
   static const _y = 'window_y';
   static const _opacity = 'opacity';
   static const _alwaysOnTop = 'always_on_top';
+  static const _autoUpdate = 'auto_update';
 
   /// Last saved window position, or null on first run.
   Offset? get windowPosition {
@@ -39,4 +40,11 @@ class PreferencesService {
   /// Saves the always-on-top choice.
   Future<void> saveAlwaysOnTop({required bool value}) =>
       _prefs.setBool(_alwaysOnTop, value);
+
+  /// Whether the app looks for and installs new releases; on unless turned off.
+  bool get autoUpdate => _prefs.getBool(_autoUpdate) ?? true;
+
+  /// Saves the auto-update choice.
+  Future<void> saveAutoUpdate({required bool value}) =>
+      _prefs.setBool(_autoUpdate, value);
 }

@@ -21,21 +21,32 @@ abstract final class WidgetLayout {
   /// The expanded view before any data has arrived.
   static const emptyDetails = Size(264, 164);
 
+  /// Height of one settings row.
+  static const menuRowHeight = 36.0;
+
   /// Settings, with the tray entry.
-  static const menuWithTray = Size(264, 309);
+  static const menuWithTray = Size(264, 345);
 
   /// Settings, without the tray entry.
-  static const menuWithoutTray = Size(264, 273);
+  static const menuWithoutTray = Size(264, 309);
 
   /// Size of the card for [state].
   static Size cardSize(UsageWidgetState state) => switch (state.viewMode) {
     ViewMode.pill => pill,
-    ViewMode.menu => state.trayAvailable ? menuWithTray : menuWithoutTray,
+    ViewMode.menu => _menuSize(state),
     ViewMode.details => switch (state.snapshot) {
       NoUsage() => emptyDetails,
       SubscriptionUsage() || GatewayUsage() || ApiUsage() => details,
     },
   };
+
+  /// Settings grow by one row when an update is waiting.
+  static Size _menuSize(UsageWidgetState state) {
+    final base = state.trayAvailable ? menuWithTray : menuWithoutTray;
+    return state.availableUpdate == null
+        ? base
+        : Size(base.width, base.height + menuRowHeight);
+  }
 
   /// Size of the window that holds a card of [card] size.
   static Size windowSizeFor(Size card) => Size(

@@ -7,6 +7,7 @@ import 'package:claude_usage_widget/data/services/autostart_service.dart';
 import 'package:claude_usage_widget/data/services/notification_service.dart';
 import 'package:claude_usage_widget/data/services/preferences_service.dart';
 import 'package:claude_usage_widget/data/services/tray_service.dart';
+import 'package:claude_usage_widget/data/services/update_service.dart';
 import 'package:claude_usage_widget/data/services/window_service.dart';
 import 'package:claude_usage_widget/domain/models/rate_limit.dart';
 import 'package:claude_usage_widget/domain/models/usage_snapshot.dart';
@@ -233,4 +234,87 @@ void main() {
       verify(() => window.setVisible(visible: false)).called(1);
     },
   );
+
+  group('updates', () {
+    late _MockUpdater updater;
+
+    setUp(() {
+      updater = _MockUpdater();
+      when(() => updater.installsAutomatically).thenReturn(true);
+      when(() => updater.install()).thenAnswer((_) async {});
+    });
+
+    UsageWidgetCubit makeWithUpdater() => UsageWidgetCubit(
+      usage: usage,
+      statusLine: statusLine,
+      autostart: autostart,
+      preferences: preferences,
+      window: window,
+      tray: tray,
+      notifications: notifications,
+      updater: updater,
+      morphDuration: Duration.zero,
+      clock: () => now,
+    );
+
+    test('a newer release is announced and installed once', () async {
+      when(() => updater.newerVersion(any())).thenAnswer((_) async => '9.9.9');
+      final cubit = makeWithUpdater();
+      await cubit.start();
+      await pumpEventQueue();
+      expect(cubit.state.availableUpdate, '9.9.9');
+      verify(() => updater.install()).called(1);
+
+      await cubit.checkForUpdate();
+      verifyNever(() => updater.install());
+      await cubit.close();
+    });
+
+    test('nothing happens when no newer release exists', () async {
+      when(() => updater.newerVersion(any())).thenAnswer((_) async => null);
+      final cubit = makeWithUpdater();
+      await cubit.start();
+      await pumpEventQueue();
+      expect(cubit.state.availableUpdate, isNull);
+      verifyNever(() => updater.install());
+      await cubit.close();
+    });
+
+    test('turned off, it never goes online', () async {
+      await preferences.saveAutoUpdate(value: false);
+      final cubit = makeWithUpdater();
+      await cubit.start();
+      await pumpEventQueue();
+      verifyNever(() => updater.newerVersion(any()));
+      await cubit.close();
+    });
+
+    test('the switch persists and starts checking when turned on', () async {
+      await preferences.saveAutoUpdate(value: false);
+      when(() => updater.newerVersion(any())).thenAnswer((_) async => null);
+      final cubit = makeWithUpdater();
+      await cubit.start();
+      await cubit.toggleAutoUpdate();
+      expect(cubit.state.autoUpdate, isTrue);
+      expect(preferences.autoUpdate, isTrue);
+      verify(() => updater.newerVersion(any())).called(1);
+      await cubit.close();
+    });
+
+    test('where it cannot install itself it only announces', () async {
+      when(() => updater.installsAutomatically).thenReturn(false);
+      when(() => updater.newerVersion(any())).thenAnswer((_) async => '9.9.9');
+      final cubit = makeWithUpdater();
+      await cubit.start();
+      await pumpEventQueue();
+      expect(cubit.state.availableUpdate, '9.9.9');
+      verifyNever(() => updater.install());
+
+      await cubit.installUpdate();
+      verify(() => updater.install()).called(1);
+      await cubit.close();
+    });
+  });
 }
+
+class _MockUpdater extends Mock implements UpdateService {}

@@ -3,8 +3,22 @@ abstract final class AppConstants {
   /// Human readable app name.
   static const appName = 'Claude Usage Widget';
 
-  /// Shown in the menu.
+  /// Shown in the menu. The release workflow rewrites this to the version
+  /// being published, so it must stay a plain `X.Y.Z` string literal.
   static const version = '0.1.0';
+
+  /// The GitHub repository releases are published to.
+  static const repository = 'jihanurrahman33/Claude-Usage-Widget';
+
+  /// Where releases are listed.
+  static const releasesPage = 'https://github.com/$repository/releases/latest';
+
+  /// The installer that also performs updates on macOS and Linux.
+  static const installScriptUrl =
+      'https://raw.githubusercontent.com/$repository/main/install.sh';
+
+  /// How often the app looks for a newer release.
+  static const updateCheckInterval = Duration(hours: 6);
 
   /// How often the data folder is polled in addition to file watching.
   static const pollInterval = Duration(seconds: 2);

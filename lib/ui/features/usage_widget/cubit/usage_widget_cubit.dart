@@ -9,6 +9,7 @@ import 'package:claude_usage_widget/data/services/autostart_service.dart';
 import 'package:claude_usage_widget/data/services/notification_service.dart';
 import 'package:claude_usage_widget/data/services/preferences_service.dart';
 import 'package:claude_usage_widget/data/services/tray_service.dart';
+import 'package:claude_usage_widget/data/services/update_service.dart';
 import 'package:claude_usage_widget/data/services/window_service.dart';
 import 'package:claude_usage_widget/domain/models/usage_snapshot.dart';
 import 'package:claude_usage_widget/domain/use_cases/alert_policy.dart';
@@ -37,6 +38,7 @@ class UsageWidgetCubit extends Cubit<UsageWidgetState>
     required this._window,
     required this._tray,
     required this._notifications,
+    this._updater,
     AlertPolicy? alertPolicy,
     Duration morphDuration = AppMotion.morph,
     DateTime Function() clock = DateTime.now,
@@ -53,6 +55,7 @@ class UsageWidgetCubit extends Cubit<UsageWidgetState>
            now: clock(),
            opacity: preferences.opacity ?? AppConstants.defaultOpacity,
            alwaysOnTop: preferences.alwaysOnTop,
+           autoUpdate: preferences.autoUpdate,
          ),
        );
 
@@ -63,6 +66,7 @@ class UsageWidgetCubit extends Cubit<UsageWidgetState>
   final WindowService _window;
   final TrayService _tray;
   final NotificationService _notifications;
+  final UpdateService? _updater;
   final AlertPolicy _alerts;
   final WindowMorpher _morpher;
   final DateTime Function() _clock;
@@ -70,6 +74,8 @@ class UsageWidgetCubit extends Cubit<UsageWidgetState>
   StreamSubscription<UsageSnapshot>? _usageSub;
   StreamSubscription<Offset>? _moveSub;
   Timer? _redraw;
+  Timer? _updateCheck;
+  String? _installAttempted;
 
   /// Loads settings, starts the tray and begins listening for usage.
   Future<void> start() async {
@@ -96,6 +102,50 @@ class UsageWidgetCubit extends Cubit<UsageWidgetState>
       AppConstants.redrawInterval,
       (_) => emit(state.copyWith(now: _clock())),
     );
+    _scheduleUpdateChecks();
+  }
+
+  void _scheduleUpdateChecks() {
+    _updateCheck?.cancel();
+    _updateCheck = null;
+    if (_updater == null || !state.autoUpdate) return;
+    unawaited(checkForUpdate());
+    _updateCheck = Timer.periodic(
+      AppConstants.updateCheckInterval,
+      (_) => unawaited(checkForUpdate()),
+    );
+  }
+
+  /// Looks for a newer release; installs it when the platform can do that
+  /// unattended. A version is only attempted once per run, so a failing
+  /// install cannot loop.
+  Future<void> checkForUpdate() async {
+    final updater = _updater;
+    if (updater == null || isClosed) return;
+    final version = await updater.newerVersion(AppConstants.version);
+    if (version == null || isClosed) return;
+    emit(state.copyWith(availableUpdate: version));
+    if (updater.installsAutomatically &&
+        state.autoUpdate &&
+        _installAttempted != version) {
+      _installAttempted = version;
+      await updater.install();
+    }
+  }
+
+  @override
+  Future<void> installUpdate() async {
+    final updater = _updater;
+    if (updater == null || state.availableUpdate == null) return;
+    await updater.install();
+  }
+
+  @override
+  Future<void> toggleAutoUpdate() async {
+    final enabled = !state.autoUpdate;
+    emit(state.copyWith(autoUpdate: enabled));
+    await _preferences.saveAutoUpdate(value: enabled);
+    _scheduleUpdateChecks();
   }
 
   void _onSnapshot(UsageSnapshot snapshot) {
@@ -210,6 +260,7 @@ class UsageWidgetCubit extends Cubit<UsageWidgetState>
   @override
   Future<void> close() async {
     _redraw?.cancel();
+    _updateCheck?.cancel();
     _morpher.cancel();
     await _usageSub?.cancel();
     await _moveSub?.cancel();

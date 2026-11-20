@@ -72,6 +72,13 @@ class MenuView extends StatelessWidget {
                       ),
                     ),
                     _MenuRow(
+                      label: 'Auto-update',
+                      trailing: _Toggle(
+                        value: state.autoUpdate,
+                        onChanged: actions.toggleAutoUpdate,
+                      ),
+                    ),
+                    _MenuRow(
                       label: 'Opacity',
                       trailing: _OpacitySlider(
                         value: state.opacity,
@@ -84,6 +91,12 @@ class MenuView extends StatelessWidget {
                 const SizedBox(height: 8),
                 _Group(
                   rows: [
+                    if (state.availableUpdate case final version?)
+                      _MenuRow(
+                        label: 'Update to $version',
+                        accent: true,
+                        onTap: actions.installUpdate,
+                      ),
                     if (state.trayAvailable)
                       _MenuRow(
                         label: 'Hide to Tray',
@@ -149,12 +162,14 @@ class _MenuRow extends StatefulWidget {
     this.trailing,
     this.onTap,
     this.destructive = false,
+    this.accent = false,
   });
 
   final String label;
   final Widget? trailing;
   final Future<void> Function()? onTap;
   final bool destructive;
+  final bool accent;
 
   @override
   State<_MenuRow> createState() => _MenuRowState();
@@ -188,7 +203,11 @@ class _MenuRowState extends State<_MenuRow> {
               maxLines: 1,
               style: AppText.style(
                 13,
-                color: widget.destructive ? glass.danger : glass.label,
+                color: widget.destructive
+                    ? glass.danger
+                    : widget.accent
+                    ? glass.accent
+                    : glass.label,
               ),
             ),
           ),

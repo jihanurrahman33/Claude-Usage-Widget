@@ -7,6 +7,7 @@ import 'package:claude_usage_widget/data/services/claude_settings_service.dart';
 import 'package:claude_usage_widget/data/services/notification_service.dart';
 import 'package:claude_usage_widget/data/services/preferences_service.dart';
 import 'package:claude_usage_widget/data/services/tray_service.dart';
+import 'package:claude_usage_widget/data/services/update_service.dart';
 import 'package:claude_usage_widget/data/services/usage_file_service.dart';
 import 'package:claude_usage_widget/data/services/window_service.dart';
 import 'package:claude_usage_widget/ui/features/usage_widget/cubit/usage_widget_cubit.dart';
@@ -59,6 +60,7 @@ class AppDependencies {
       window: window,
       tray: SystemTrayService(),
       notifications: _notifications(),
+      updater: GitHubUpdateService(),
     );
     return AppDependencies(
       preferences: preferences,

@@ -24,7 +24,8 @@ Both must pass. For UI changes, attach a screenshot or a render from
 
 ## Guidelines
 
-- Keep the app free of network calls and away from credentials.
+- Keep the app free of network calls other than the update check, and away
+  from credentials.
 - Follow the structure in [docs/architecture.md](docs/architecture.md).
 - Add or update tests with behaviour changes.
 - Keep pull requests focused; one change per pull request.

@@ -7,7 +7,8 @@
 **See your Claude Code limits at a glance, without typing `/usage`.**
 
 A small always-on-top desktop widget with activity-style rings for your
-5-hour and 7-day limits. Local only: no network calls, no login token.
+5-hour and 7-day limits. Local only: no login token, and the only network request is an
+optional update check.
 
 [![CI](https://github.com/jihanurrahman33/Claude-Usage-Widget/actions/workflows/ci.yml/badge.svg)](https://github.com/jihanurrahman33/Claude-Usage-Widget/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -30,7 +31,8 @@ widget keeps the answer on screen, so you see a limit coming before you hit it.
   spend, or estimated cost and context window for API keys. The widget picks
   the view from the data it receives.
 - **Private by design.** It reads what Claude Code already hands to its status
-  line. It makes no network calls and never reads your credentials.
+  line and never reads your credentials. Its one network request is the
+  [update check](#update), which you can turn off.
 - **Alerts** when a limit crosses 80% and 95%.
 - **Light and dark**, following your system theme.
 - **Always on top**, with a switch to turn it off.
@@ -107,16 +109,21 @@ Download the `.zip` from the
 
 ## Update
 
-The widget never goes online, so it does not update itself or check for new
-versions. Watch the repository's releases (**Watch → Custom → Releases**) to
-hear about them.
+Every change merged to `main` is published as a new release automatically.
 
-- **Linux:** run the install command again. It replaces the app, keeps your
-  settings and status line, and restarts the widget if it was running.
-  To pin a version: `... | bash -s -- --version v0.1.0`.
+The widget checks for a newer release when it starts and every six hours. This
+is its only network request: one anonymous call to GitHub's public API for the
+latest release's version number. Nothing about you or your usage is sent.
+
+- **macOS and Linux:** it installs the new version itself (the same verified
+  download as the install command), keeps your settings and status line, and
+  restarts.
+- **Windows:** it adds an **Update to x.y.z** row to Settings that opens the
+  release page. Download the `.zip` and replace the old folder.
+- **Turn it off:** Settings → **Auto-update**. The widget then never goes online.
+- **Update by hand:** run the install command again. To pin a version:
+  `... | bash -s -- --version v0.1.0`.
 - **Built from source:** `git pull`, then `./build_linux.sh && ./install_linux.sh`.
-- **macOS and Windows:** quit the widget, download the latest release and
-  replace the old app or folder.
 
 ## Uninstall
 

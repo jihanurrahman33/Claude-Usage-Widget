@@ -1,10 +1,57 @@
 name: build
+
+# Every push to main that changes the app builds all three packages and
+# publishes them as a new GitHub Release. The installer and the app's own
+# update check both read "the latest release", so shipping is just merging.
 on:
-  push: { tags: ['v*'] }
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'LICENSE'
+      - '.github/ISSUE_TEMPLATE/**'
   workflow_dispatch:
 
+# One release at a time, so two quick merges cannot pick the same version.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
+  # Picks the version to publish. Releases are numbered by this job, not by
+  # hand: the next patch after the latest release. To ship a bigger step,
+  # raise `version:` in pubspec.yaml past the latest release (for example to
+  # 0.2.0) and merge; that exact version is used once.
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.next.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: next
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          base="$(sed -n 's/^version: *\([0-9][0-9.]*\).*/\1/p' pubspec.yaml)"
+          latest="$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq .tag_name 2>/dev/null || true)"
+          latest="${latest#v}"
+          top="$(printf '%s\n%s\n' "$base" "${latest:-0.0.0}" | sort -V | tail -1)"
+          if [ "$top" = "$base" ] && [ "$base" != "$latest" ]; then
+            next="$base"
+          else
+            IFS=. read -r major minor patch <<<"$top"
+            next="$major.$minor.$((patch + 1))"
+          fi
+          if ! [[ "$next" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Could not work out the next version (base='$base', latest='$latest')"
+            exit 1
+          fi
+          echo "pubspec version: $base, latest release: ${latest:-none}, publishing: $next"
+          echo "version=$next" >> "$GITHUB_OUTPUT"
+
   build:
+    needs: version
     strategy:
       fail-fast: false
       matrix:
@@ -17,15 +64,18 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - name: Tag must match the pubspec version
-        if: startsWith(github.ref, 'refs/tags/v')
+      # The app shows this number and compares it with the latest release to
+      # decide whether an update exists, so it must be the version published.
+      - name: Stamp the version
         shell: bash
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
         run: |
-          version="$(sed -n 's/^version: *\([^+]*\).*/\1/p' pubspec.yaml)"
-          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
-            echo "::error::Tag $GITHUB_REF_NAME does not match pubspec version $version"
-            exit 1
-          fi
+          perl -pi -e "s/^version: .*/version: $VERSION+${GITHUB_RUN_NUMBER}/" pubspec.yaml
+          perl -pi -e "s/(static const version = ')[^']*(')/\${1}$VERSION\${2}/" lib/config/app_constants.dart
+          grep -n '^version:' pubspec.yaml
+          grep -n 'static const version' lib/config/app_constants.dart
+          grep -q "static const version = '$VERSION'" lib/config/app_constants.dart
       - uses: subosito/flutter-action@v2
         # Pinned to the version the project is developed and checked on.
         with: { channel: stable, flutter-version: 3.47.9 }
@@ -33,6 +83,9 @@ jobs:
         if: matrix.name == 'linux'
         run: sudo apt-get update && sudo apt-get install -y ninja-build libgtk-3-dev libx11-dev libxi-dev libayatana-appindicator3-dev libnotify-dev
       - run: flutter pub get
+      - name: Analyze
+        if: matrix.name == 'linux'
+        run: flutter analyze
       - run: flutter test
       - name: Bridge tests
         shell: bash
@@ -74,31 +127,28 @@ jobs:
           name: ${{ matrix.name }}
           path: claude-usage-widget-*
 
-  # Publishes the three packages as a GitHub Release when a v* tag is pushed.
-  # Asset names carry no version so releases/latest/download/<name> always
-  # points at the newest one; install.sh relies on that.
+  # Publishes the three packages as a GitHub Release, tagged with the version
+  # picked above. Asset names carry no version so
+  # releases/latest/download/<name> always points at the newest one; install.sh
+  # relies on that. The tag is created by this release, so nothing has to be
+  # committed back to main and no second workflow run is triggered.
   release:
-    if: startsWith(github.ref, 'refs/tags/v')
-    needs: build
+    needs: [version, build]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with: { path: dist, merge-multiple: true }
       - name: Checksums
         run: cd dist && sha256sum claude-usage-widget-* > SHA256SUMS && cat SHA256SUMS
-      - name: Release notes from the changelog
-        run: |
-          version="${GITHUB_REF_NAME#v}"
-          awk -v v="$version" '
-            /^## / { on = ($2 == v); next }
-            on
-          ' CHANGELOG.md > notes.md
-          [ -s notes.md ] || echo "Release $GITHUB_REF_NAME" > notes.md
-          cat notes.md
       - name: Publish
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" dist/* --title "$GITHUB_REF_NAME" --notes-file notes.md --verify-tag
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          gh release create "v$VERSION" dist/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "v$VERSION" \
+            --generate-notes
